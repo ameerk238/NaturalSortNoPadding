@@ -2,41 +2,51 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+NaturalSortNoPadding solves the critical issue of creating videos from image frames with inconsistent naming. When standard sorting fails with filenames like frame1.png, frame10.png, frame2.png, this tool correctly orders frames numerically, ensuring properly sequenced videos without requiring manual filename adjustments.
+
 ## The Problem This Solves
 
 When creating videos from image sequences, a critical issue often arises: **frame ordering without zero padding**.
 
-Consider a sequence of frames named:
+Consider these two common examples:
+
+**Example 1: No padding**
 ```
-frame1.png, frame2.png, ..., frame9.png, frame10.png, frame11.png, ...
+frame1.png, frame2.png, ..., frame9.png, frame10.png, ..., frame100.png
+```
+
+**Example 2: Inconsistent padding**
+```
+frame001.png, frame002.png, ..., frame0010.png, ..., frame00100.png
 ```
 
 Standard alphabetical sorting orders these incorrectly as:
+
+**Example 1 (wrong order):**
 ```
-frame1.png, frame10.png, frame11.png, ..., frame2.png, ...
+frame1.png, frame10.png, frame100.png, ..., frame2.png, ...
+```
+
+**Example 2 (wrong order):**
+```
+frame001.png, frame0010.png, frame00100.png, ..., frame002.png, ...
 ```
 
 This results in jumbled videos where frames appear out of sequence, making the output unusable.
 
-This problem is pervasive in computer vision, machine learning pipelines, and video processing workflows where:
-- **Files lack zero-padding** (e.g., using `frame1.png` instead of `frame01.png`, `frame001.png`)
-- Files are renamed during processing, losing any original zero-padding
-- Different naming conventions are used across datasets
-- Files come from multiple sources with different naming patterns
-
 ## The Solution
 
-This tool implements **alphanumeric sorting without zero-padding requirements** (a form of natural sorting) to address this issue. The algorithm specifically identifies numeric segments in strings and treats them as numbers rather than characters, ensuring proper sequence even without zero-padding:
+This tool implements **alphanumeric sorting without zero-padding requirements** to address this issue. The algorithm specifically identifies numeric segments in strings and treats them as numbers rather than characters, ensuring proper sequence even without zero-padding:
 
+**Example 1 (correct order):**
 ```
-frame1.png < frame2.png < ... < frame9.png < frame10.png < frame11.png
+frame1.png < frame2.png < ... < frame9.png < frame10.png < ... < frame100.png
 ```
 
-The script:
-1. Automatically detects and sorts image frames in the correct numeric order even without zero padding
-2. Creates properly sequenced videos using FFmpeg
-3. Works with various image formats (.png, .jpg, .jpeg)
-4. Can process individual directories or entire directory structures recursively
+**Example 2 (correct order):**
+```
+frame001.png < frame002.png < ... < frame0010.png < ... < frame00100.png
+```
 
 ## Requirements
 
@@ -84,26 +94,26 @@ optional arguments:
 
 ### Examples
 
-#### Using the provided sample data:
+#### Example 1: Basic usage with non-padded filenames
 ```bash
-# Process frames_sample1 directory
-python frame_to_video.py -i /Users/ameerkhan/Downloads/NaturalSortNoPadding/example_data/frames_sample1 -o ./output_videos
-
-# Process frames_sample2 directory
-python frame_to_video.py -i /Users/ameerkhan/Downloads/NaturalSortNoPadding/example_data/frames_sample2 -o ./output_videos
-
-# Process both sample directories at once
-python frame_to_video.py -i /Users/ameerkhan/Downloads/NaturalSortNoPadding/example_data -o ./output_videos --recursive
+# For a directory with frame1.png, frame2.png, ..., frame10.png, etc.
+python frame_to_video.py -i ./frames_no_padding -o ./output_videos
 ```
 
-#### Custom naming:
+#### Example 2: Processing inconsistently padded filenames
 ```bash
-python frame_to_video.py -i ./example_data/frames_sample1 -o ./project/videos -n "my_video"
+# For a directory with frame001.png, frame002.png, ..., frame0010.png, etc.
+python frame_to_video.py -i ./frames_inconsistent_padding -o ./output_videos
 ```
 
-#### Custom resolution and frame rate:
+#### Processing multiple frame directories at once
 ```bash
-python frame_to_video.py -i ./example_data/frames_sample2 -o ./videos -r 640x480 -f 30
+python frame_to_video.py -i ./all_frame_folders -o ./output_videos --recursive
+```
+
+#### Custom output name, resolution and frame rate
+```bash
+python frame_to_video.py -i ./frames -o ./videos -n "my_sequence" -r 640x480 -f 30
 ```
 
 ## How It Works
@@ -119,31 +129,25 @@ The script can work with two types of directory structures:
 
 ### Mode 1: Single Directory Mode
 ```
-example_data/frames_sample1/
-├── frame_000.png
-├── frame_001.png
+frames_directory/
+├── frame1.png (or frame001.png)
+├── frame2.png (or frame002.png)
 ├── ...
-└── frame_100.png
+└── frame100.png (or frame00100.png)
 ```
-Use: `python frame_to_video.py -i /Users/ameerkhan/Downloads/NaturalSortNoPadding/example_data/frames_sample1 -o output_directory`
-
-Result: One video file created in the output directory
 
 ### Mode 2: Recursive Mode (Multiple Sequences)
 ```
-example_data/
-├── frames_sample1/
-│   ├── frame_000.png
-│   ├── frame_001.png
+parent_directory/
+├── sequence1/
+│   ├── frame1.png
+│   ├── frame2.png
 │   └── ...
-└── frames_sample2/
-    ├── frame_000.png
-    ├── frame_001.png
+└── sequence2/
+    ├── frame001.png
+    ├── frame002.png
     └── ...
 ```
-Use: `python frame_to_video.py -i parent_directory -o output_directory --recursive`
-
-Result: Multiple video files created in the output directory, one for each sequence folder
 
 ## License
 
